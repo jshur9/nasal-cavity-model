@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nasal Cavity Interaction Model</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <aside class="panel sidebar">
+      <div class="hero">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div class="mark">N</div>
+          <div>
+            <h1>Nasal cavity interaction model</h1>
+            <p>
+              Resyca-like soft-mist spray visualizer with Rayleigh-breakup aligned aerosol behavior,
+              simplified anatomical regions, and parcel-based deposition.
+            </p>
+          </div>
+        </div>
+        <button id="themeBtn" class="secondary" type="button">Theme</button>
+      </div>
+
+      <div class="chip">Sagittal anatomy + regional deposition + nozzle sweep</div>
+
+      <section>
+        <h2>Device and spray</h2>
+        <div class="grid2">
+          <div class="field"><label for="preset">Preset</label><select id="preset"></select></div>
+          <div class="field">
+            <label for="viewMode">Visual tab</label>
+            <select id="viewMode">
+              <option value="cavity">Cavity</option>
+              <option value="heatmap">Heatmap</option>
+              <option value="plume">Plume only</option>
+              <option value="sweep">Nozzle sweep</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2" style="margin-top:12px;">
+          <div class="field"><label for="dNoz">Nozzle diameter (µm)</label><input id="dNoz" type="number" min="5" max="30" step="0.1" /></div>
+          <div class="field"><label for="pressure">Pressure (bar)</label><input id="pressure" type="number" min="2" max="20" step="0.1" /></div>
+        </div>
+        <div class="grid2" style="margin-top:12px;">
+          <div class="field"><label for="mu">Viscosity (mPa·s)</label><input id="mu" type="number" min="0.5" max="10" step="0.1" /></div>
+          <div class="field"><label for="sigma">Surface tension (mN/m)</label><input id="sigma" type="number" min="20" max="80" step="0.1" /></div>
+        </div>
+        <div class="grid2" style="margin-top:12px;">
+          <div class="field"><label for="rho">Density (kg/m³)</label><input id="rho" type="number" min="800" max="1300" step="1" /></div>
+          <div class="field"><label for="jets">Jet count</label><input id="jets" type="number" min="10" max="300" step="1" /></div>
+        </div>
+        <div class="grid2" style="margin-top:12px;">
+          <div class="field"><label for="dose">Emitted dose (µL)</label><input id="dose" type="number" min="10" max="150" step="1" /></div>
+          <div class="field"><label for="mech">Actuator constant</label><input id="mech" type="number" min="0.2" max="3" step="0.05" /></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Administration and anatomy</h2>
+        <div class="grid2">
+          <div class="field"><label for="angle">Insertion angle (°)</label><input id="angle" type="number" min="0" max="80" step="1" /></div>
+          <div class="field"><label for="depth">Insertion depth (mm)</label><input id="depth" type="number" min="0" max="20" step="0.5" /></div>
+        </div>
+        <div class="grid2" style="margin-top:12px;">
+          <div class="field"><label for="headTilt">Head tilt (°)</label><input id="headTilt" type="number" min="-20" max="30" step="1" /></div>
+          <div class="field">
+            <label for="breathing">Breathing pattern</label>
+            <select id="breathing">
+              <option value="normal">Normal</option>
+              <option value="gentle">Gentle sniff</option>
+              <option value="vigorous">Vigorous sniff</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <label for="time">Time in spray (ms)</label>
+          <input id="time" type="range" min="0" max="250" step="5" value="0" />
+        </div>
+        <div class="field" style="margin-top:10px;">
+          <label><input id="deterministic" type="checkbox" checked /> Deterministic render</label>
+        </div>
+        <div class="btnrow" style="margin-top:10px;">
+          <button id="playBtn" type="button">Play</button>
+          <button id="resetBtn" class="secondary" type="button">Reset</button>
+        </div>
+      </section>
+
+      <section aria-live="polite">
+        <h2>Outputs</h2>
+        <div class="metrics">
+          <div class="metric"><div class="k">Dv50</div><div class="v" id="dv50">—</div></div>
+          <div class="metric"><div class="k">Span</div><div class="v" id="span">—</div></div>
+          <div class="metric"><div class="k">Plume angle</div><div class="v" id="plumeAngle">—</div></div>
+          <div class="metric"><div class="k">Jet velocity</div><div class="v" id="jetVel">—</div></div>
+          <div class="metric"><div class="k">Spray duration</div><div class="v" id="duration">—</div></div>
+          <div class="metric"><div class="k">Front loading index</div><div class="v" id="frontLoad">—</div></div>
+          <div class="metric"><div class="k">Rayleigh regime</div><div class="v" id="rayleighRegime">—</div></div>
+          <div class="metric"><div class="k">Primary droplet</div><div class="v" id="primaryDrop">—</div></div>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="panel viz">
+        <div class="tabs" role="tablist" aria-label="Visualization tabs">
+          <button class="tab active" role="tab" data-tab="cavity">Cavity</button>
+          <button class="tab" role="tab" data-tab="heatmap">Heatmap</button>
+          <button class="tab" role="tab" data-tab="plume">Plume</button>
+          <button class="tab" role="tab" data-tab="sweep">Sweep</button>
+        </div>
+        <canvas id="canvas"></canvas>
+      </section>
+      <section class="panel bottom">
+        <div class="regions" id="regions"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
