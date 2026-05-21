@@ -73,7 +73,7 @@ if (els.viewMode) {
 
 ["input","change"].forEach(evt => {
   document.body.addEventListener(evt, (e) => {
-    if (e.target.matches("input,select")) frame();
+    if (e.target.matches("input,select") && e.target.id !== "viewMode") frame();
   });
 });
 els.playBtn.addEventListener("click", togglePlay);
