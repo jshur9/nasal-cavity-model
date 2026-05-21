@@ -434,10 +434,10 @@ function drawPlume(ctx, sc, inp, m, prog, opts = {}) {
   const halfAngleRad = (m.plumeAngle * Math.PI) / 360;
   const dv50 = m.dv50 || 5;
   const widenScale = clamp(
-    (1 - 0.03 * ((inp.pressureBar || 8) - 8)) / (1 + 0.06 * (dv50 - 4)),
-    0.55, 1.45);
+    (1 - 0.045 * ((inp.pressureBar || 8) - 8)) / (1 + 0.08 * (dv50 - 4)),
+    0.45, 1.20);
   const ha = halfAngleRad * widenScale;
-  const coneLen = 0.95;
+  const coneLen = 0.78;
 
   ctx.save();
   ctx.clip(getCastPath("outer", sc));
@@ -452,7 +452,7 @@ function drawPlume(ctx, sc, inp, m, prog, opts = {}) {
     const lowerX = X(nx0 + Math.cos(aim - ha) * coneLen);
     const lowerY = Y(ny0 - Math.sin(aim - ha) * coneLen);
     const grad = ctx.createLinearGradient(tipX, tipY, farX, farY);
-    grad.addColorStop(0.0, "rgba(156,214,235,0.28)");
+    grad.addColorStop(0.0, "rgba(156,214,235,0.20)");
     grad.addColorStop(1.0, "rgba(156,214,235,0.02)");
     ctx.fillStyle = grad;
     ctx.beginPath();
@@ -499,7 +499,7 @@ function drawPlume(ctx, sc, inp, m, prog, opts = {}) {
         ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
       } else {
         // Mist: cool diffuse blue
-        ctx.fillStyle = `rgba(167,220,240,${alpha})`;
+        ctx.fillStyle = `rgba(167,220,240,${alpha *0.72})`;
       }
 
       ctx.beginPath();
