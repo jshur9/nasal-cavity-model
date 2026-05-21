@@ -10,6 +10,21 @@ update and nasal-cast rendering integration.
 **Source:** CT-derived 3-D nasal cast reference image (right nasal cavity,
 angled view) provided by user.
 
+**Implementation note (2025 update):** The cast silhouette and internal
+structures are encoded as embedded SVG path data in `src/render.js` (the
+`CAST` constant). Each path uses normalised `[0,1] × [0,1]` coordinates with
+only `M`/`L`/`C`/`Z` commands and explicit absolute `(x, y)` pairs, so it is
+deterministically rescaled to canvas pixels at draw time and reused via
+cached `Path2D` instances. No external SVG asset file is required; this
+keeps the simulator fully static-host compatible (GitHub Pages).
+
+Anatomical features encoded in `CAST`:
+- `outer` — cavity outline (vestibule → skull base → posterior wall → floor).
+- `septum` — faint medial-wall contour (dashed) running along the cavity midline.
+- `infTurb`, `midTurb`, `supTurb` — inferior, middle and (new) superior turbinate shelves descending from the lateral wall.
+- `infMeatus`, `midMeatus` — meatus separation lines beneath/between turbinates.
+- `choana` — posterior opening to the nasopharynx.
+
 **Assumptions made for 2-D sagittal reconstruction:**
 
 - The 3-D cast is projected onto a sagittal cross-section for the canvas view.
@@ -109,3 +124,65 @@ The nozzle discharge coefficient Cd_noz = 0.17 is retained from the prior model.
 This low value (relative to a sharp-edged orifice ~0.61) reflects the specific
 geometry of the micro-orifice atomiser modelled (e.g., recessed or tapered
 orifice reducing vena-contracta loss).
+
+---
+
+## 6. Plume visualisation (render)
+
+The plume is rendered as a particle cloud whose position is computed
+analytically per frame from a deterministic seed, with no per-frame object
+allocation. State is held in a single pre-allocated `Float32Array` pool
+(`MAX_PARTICLES = 1600`, stride = 7 floats), which is overwritten each frame
+in normalised cavity coordinates.
+
+**Motion model (per particle):**
+
+- Initial position: nozzle tip (advanced inward by insertion depth).
+- Initial direction: insertion angle minus a small head-tilt contribution,
+  with a per-particle angular offset drawn from a cone of half-angle `θ½`.
+- Speed: scaled so that core particles cross ~90 % of cavity length in
+  ~55 % of the model spray duration; small per-particle jitter.
+- Trajectory: analytical solution of the linear-drag ODE plus a tiny
+  ballistic gravity term:
+
+  ```
+  x(t) = x₀ + v_x · (1 − e^(−k·t)) / k
+  y(t) = y₀ + v_y · (1 − e^(−k·t)) / k + ½ g t²
+  ```
+
+  where `k` (drag decay, per ms) is mapped from the model `dragRatio`
+  (Eq. 20) via `k = clamp(log10(max(ε,10)) · 0.0022, 0.001, 0.018)`. Closed-
+  form integration avoids per-step accumulation and keeps the visualisation
+  numerically stable across the full time-slider range.
+
+**Cone half-angle response:**
+
+`θ½ = (plumeAngle/2) · widenScale`, where
+
+```
+widenScale = clamp( (1 − 0.03·(P − 8)) / (1 + 0.06·(dv50 − 4)),  0.55, 1.45 )
+```
+
+This makes the plume tighter at higher pressure (smaller, faster droplets)
+and at larger dv50 (greater inertia, less spread), while still being driven
+by the master `plumeAngle` output of the physics model.
+
+**Core / outer-mist split:**
+
+- 70 % of particles are drawn from a near-axis "core" distribution
+  (triangular angular profile, brighter alpha, marginally faster).
+- 30 % are drawn from an outer "mist" distribution (square-root-of-radius
+  angular profile, lower alpha, smaller average size).
+
+Sizes and alphas additionally scale with normalised axial distance so the
+plume is *tight and bright* near the nozzle and *wider and softer*
+downstream, matching qualitative imaging of soft-mist sprays.
+
+**Determinism:** when the *Deterministic render* toggle is on, the pool is
+re-seeded from `(tMs, plumeAngle, dv50)` so the same control state always
+produces the same particle pattern. When off, the seed is taken from
+`Date.now()` so the plume animates with frame-to-frame variation.
+
+**Safety:** all model outputs are validated against `Number.isFinite` and
+fall back to safe defaults; per-particle integration results are checked
+likewise so neither `NaN` nor `undefined` can propagate into the canvas.
