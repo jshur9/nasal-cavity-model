@@ -55,12 +55,6 @@ function togglePlay() {
   else if (raf) cancelAnimationFrame(raf);
 }
 
-function setTab(tabName) {
-  tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.tab === tabName));
-  els.viewMode.value = tabName;
-  frame();
-}
-
 initUI(els);
 presets.forEach((p, i) => {
   const o = document.createElement("option");
@@ -73,11 +67,6 @@ document.querySelectorAll(".tab").forEach(btn => {
   btn.addEventListener("click", () => setTab(btn.dataset.tab));
 });
 
-// viewMode select (kept in sync with tab buttons)
-if (els.viewMode) {
-  els.viewMode.addEventListener("change", () => setTab(els.viewMode.value));
-}
-
 ["input","change"].forEach(evt => {
   document.body.addEventListener(evt, (e) => {
     if (e.target.matches("input,select") && e.target.id !== "viewMode") frame();
@@ -88,7 +77,6 @@ els.resetBtn.addEventListener("click", () => { playing = false; if (raf) cancelA
 els.themeBtn.addEventListener("click", () => { document.documentElement.setAttribute("data-theme", document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"); frame(); });
 els.preset.addEventListener("change", e => applyPreset(Number(e.target.value)));
 els.viewMode.addEventListener("change", () => setTab(els.viewMode.value));
-tabs.forEach(tab => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
 window.addEventListener("resize", () => { resizeCanvas(canvas, ctx); frame(); });
 
 resizeCanvas(canvas, ctx);
