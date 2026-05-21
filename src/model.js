@@ -72,6 +72,15 @@ export function model(inp) {
   const plumeAngle = clamp(17.4 - 0.25 * (pressureBar - 10) + 0.6 * clamp(secondaryPeakFraction - 0.15, -0.15, 0.2), 10, 22);
   const durationMs = clamp(100 + 2.2 * safe(inp.doseUl, 40) * safe(inp.mech, 1), 90, 320);
 
+  // Aerodynamic drag metrics for spray droplets in gas phase.
+  const rho_g = 1.2;
+  const mu_g = 1.85e-5;
+  const dropDiameterM = Math.max(dv50 * 1e-6, 1e-9);
+  const a = Math.max(dropDiameterM / 2, 1e-10);
+  const Re_drop = clamp((rho_g * vJet * dropDiameterM) / mu_g, 1e-6, 1e6);
+  const Cd_aero = 23.5 / Re_drop + 4.6 / Math.sqrt(Re_drop) + 0.3;
+  const dragRatio = (8 * rho_g * vJet * vJet * Cd_aero) / (rho * a * Math.max(D, 1e-9));
+
   const breathingWeight = inp.breathing === "vigorous" ? 1.12 : inp.breathing === "gentle" ? 0.95 : 1;
   const angleWeight = clamp(1 - Math.abs(safe(inp.angle, 32) - 32) / 70, 0.7, 1.05);
   const depthWeight = clamp(0.85 + safe(inp.depth, 6) / 35, 0.75, 1.25);
@@ -101,6 +110,8 @@ export function model(inp) {
     frontLoadingIndex,
     rayleighScore: rayleighRegime,
     primaryDropUm,
+    Cd_aero,
+    dragRatio,
     coalescenceIndex,
     secondaryPeakFraction,
     ...regions
