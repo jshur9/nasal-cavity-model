@@ -12,6 +12,7 @@ export function initUI(els) {
 
 export function getInputs(els) {
   return {
+    viewMode: els.viewMode.value,
     dNozUm: clamp(num(els.dNoz.value, 12), 5, 30),
     pressureBar: clamp(num(els.pressure.value, 8), 2, 20),
     muMpas: clamp(num(els.mu.value, 1.1), 0.5, 10),

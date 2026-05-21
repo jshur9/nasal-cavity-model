@@ -7,6 +7,7 @@ const els = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]))
 els.regions = document.getElementById("regions");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const tabs = Array.from(document.querySelectorAll(".tab"));
 
 let playing = false, raf = null, lastTs = 0, activeTab = "cavity";
 
@@ -54,6 +55,12 @@ function togglePlay() {
   else if (raf) cancelAnimationFrame(raf);
 }
 
+function setTab(tabName) {
+  tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.tab === tabName));
+  els.viewMode.value = tabName;
+  frame();
+}
+
 initUI(els);
 presets.forEach((p, i) => {
   const o = document.createElement("option");
@@ -80,6 +87,8 @@ els.playBtn.addEventListener("click", togglePlay);
 els.resetBtn.addEventListener("click", () => { playing = false; if (raf) cancelAnimationFrame(raf); els.playBtn.textContent = "Play"; els.time.value = "0"; frame(); });
 els.themeBtn.addEventListener("click", () => { document.documentElement.setAttribute("data-theme", document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"); frame(); });
 els.preset.addEventListener("change", e => applyPreset(Number(e.target.value)));
+els.viewMode.addEventListener("change", () => setTab(els.viewMode.value));
+tabs.forEach(tab => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
 window.addEventListener("resize", () => { resizeCanvas(canvas, ctx); frame(); });
 
 resizeCanvas(canvas, ctx);
