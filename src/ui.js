@@ -39,6 +39,8 @@ export function updateOutputs(els, inp) {
   els.frontLoad.textContent = m.frontLoadingIndex.toFixed(2);
   els.rayleighRegime.textContent = m.rayleighScore;
   els.primaryDrop.textContent = `${m.primaryDropUm.toFixed(1)} µm`;
+  if (els.cdAero)    els.cdAero.textContent    = m.Cd_aero.toFixed(3);
+  if (els.dragRatio) els.dragRatio.textContent  = m.dragRatio.toExponential(2);
   els.time.max = Math.ceil(m.durationMs);
   regionDefs.forEach(r => {
     document.getElementById(`fill-${r.key}`).style.width = `${m[r.key]}%`;
